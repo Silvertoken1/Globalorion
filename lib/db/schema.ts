@@ -1,5 +1,4 @@
 import { pgTable, serial, text, timestamp, integer, real } from "drizzle-orm/pg-core"
-import { relations } from "drizzle-orm"
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -21,7 +20,7 @@ export const users = pgTable("users", {
 
 export const activationPins = pgTable("activation_pins", {
   id: serial("id").primaryKey(),
-  pinCode: text("pin_code").unique().notNull(),
+  pin: text("pin_code").unique().notNull(),
   status: text("status").notNull().default("available"),
   createdBy: integer("created_by").references(() => users.id),
   usedBy: integer("used_by").references(() => users.id),
@@ -71,13 +70,6 @@ export const commissions = pgTable("commissions", {
   createdAt: timestamp("created_at").defaultNow(),
 })
 
-export const systemSettings = pgTable("system_settings", {
-  id: serial("id").primaryKey(),
-  settingKey: text("setting_key").unique().notNull(),
-  settingValue: text("setting_value").notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-})
-
 export const withdrawals = pgTable("withdrawals", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
@@ -93,21 +85,9 @@ export const withdrawals = pgTable("withdrawals", {
   createdAt: timestamp("created_at").defaultNow(),
 })
 
-// Relations
-export const usersRelations = relations(users, ({ many, one }) => ({
-  sponsor: one(users, { fields: [users.sponsorId], references: [users.id] }),
-  upline: one(users, { fields: [users.uplineId], references: [users.id] }),
-  payments: many(payments),
-  commissions: many(commissions),
-  matrixPositions: many(matrixPositions),
-  withdrawals: many(withdrawals),
-}))
-
-export const paymentsRelations = relations(payments, ({ one }) => ({
-  user: one(users, { fields: [payments.userId], references: [users.id] }),
-}))
-
-export const commissionsRelations = relations(commissions, ({ one }) => ({
-  user: one(users, { fields: [commissions.userId], references: [users.id] }),
-  fromUser: one(users, { fields: [commissions.fromUserId], references: [users.id] }),
-}))
+export const systemSettings = pgTable("system_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: text("setting_key").unique().notNull(),
+  settingValue: text("setting_value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+})

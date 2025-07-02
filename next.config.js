@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["bcryptjs", "jsonwebtoken", "nodemailer"],
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,10 +7,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["localhost", "bright-orion.vercel.app"],
+    domains: ["localhost", "vercel.app"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
     unoptimized: true,
   },
-  output: "standalone",
+  experimental: {
+    serverComponentsExternalPackages: ["@neondatabase/serverless", "bcryptjs", "jsonwebtoken", "nodemailer"],
+  },
 }
 
 module.exports = nextConfig
