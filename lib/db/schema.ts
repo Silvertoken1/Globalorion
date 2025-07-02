@@ -20,12 +20,19 @@ export const users = pgTable("users", {
 
 export const activationPins = pgTable("activation_pins", {
   id: serial("id").primaryKey(),
-  pin: text("pin_code").unique().notNull(),
+  pinCode: text("pin_code").unique().notNull(),
   status: text("status").notNull().default("available"),
   createdBy: integer("created_by").references(() => users.id),
   usedBy: integer("used_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   usedAt: timestamp("used_at"),
+})
+
+export const systemSettings = pgTable("system_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: text("setting_key").unique().notNull(),
+  settingValue: text("setting_value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 })
 
 export const payments = pgTable("payments", {
@@ -83,11 +90,4 @@ export const withdrawals = pgTable("withdrawals", {
   processedBy: integer("processed_by").references(() => users.id),
   processedAt: timestamp("processed_at"),
   createdAt: timestamp("created_at").defaultNow(),
-})
-
-export const systemSettings = pgTable("system_settings", {
-  id: serial("id").primaryKey(),
-  settingKey: text("setting_key").unique().notNull(),
-  settingValue: text("setting_value").notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 })
