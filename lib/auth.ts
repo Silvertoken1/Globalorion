@@ -1,35 +1,51 @@
-import { SignJWT, jwtVerify } from "jose"
 import type { NextRequest } from "next/server"
+import { jwtVerify } from "jose"
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-this-in-production")
-
-export interface TokenPayload {
-  userId: number
+export interface User {
+  userId: string
   email: string
   role: string
 }
 
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function getUser(request: NextRequest): Promise<User | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload as TokenPayload
+    const token = request.cookies.get("auth-token")?.value
+
+    if (!token) {
+      return null
+    }
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback-secret-key")
+
+    const { payload } = await jwtVerify(token, secret)
+
+    return {
+      userId: payload.userId as string,
+      email: payload.email as string,
+      role: payload.role as string,
+    }
   } catch (error) {
-    console.error("Token verification failed:", error)
+    console.error("Auth verification failed:", error)
     return null
   }
 }
 
-export async function generateToken(payload: TokenPayload): Promise<string> {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .sign(JWT_SECRET)
+export async function requireAuth(request: NextRequest): Promise<User> {
+  const user = await getUser(request)
+
+  if (!user) {
+    throw new Error("Authentication required")
+  }
+
+  return user
 }
 
-// Helper function to verify token from request
-export async function verifyTokenFromRequest(request: NextRequest): Promise<TokenPayload | null> {
-  const token = request.cookies.get("auth-token")?.value
-  if (!token) return null
-  return await verifyToken(token)
+export async function requireAdmin(request: NextRequest): Promise<User> {
+  const user = await requireAuth(request)
+
+  if (user.role !== "admin") {
+    throw new Error("Admin access required")
+  }
+
+  return user
 }
