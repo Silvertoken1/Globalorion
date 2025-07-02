@@ -37,6 +37,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# database
+/data
+*.db
+*.sqlite
+/drizzle
+
 # IDE
 .vscode/
 .idea/
@@ -45,10 +51,6 @@ next-env.d.ts
 
 # OS
 Thumbs.db
-
-# Database
-*.db
-*.sqlite
 
 # Logs
 logs
@@ -73,6 +75,15 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
 # Optional REPL history
 .node_repl_history
 
@@ -82,46 +93,60 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.test
-.env.production
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
-# next.js build output
+# Next.js build output
 .next
 
-# nuxt.js build output
+# Nuxt.js build / generate output
 .nuxt
+dist
 
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
+# Storybook build outputs
+.out
+.storybook-out
 
 # Temporary folders
 tmp/
 temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Security files
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Environment files
+.env*
+!.env.example
 
 # Lock files (keep only one)
 package-lock.json
