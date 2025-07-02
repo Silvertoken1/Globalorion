@@ -3,10 +3,21 @@ import { initializeDatabase } from "@/lib/database"
 
 export async function GET() {
   try {
+    console.log("🚀 Database initialization started...")
+
     const result = await initializeDatabase()
-    return NextResponse.json(result)
+
+    console.log("✅ Database initialization completed successfully!")
+
+    return NextResponse.json({
+      success: true,
+      message: "Database initialized successfully",
+      data: result,
+      timestamp: new Date().toISOString(),
+    })
   } catch (error) {
-    console.error("Database initialization error:", error)
+    console.error("❌ Database initialization failed:", error)
+
     return NextResponse.json(
       {
         success: false,
@@ -17,8 +28,4 @@ export async function GET() {
       { status: 500 },
     )
   }
-}
-
-export async function POST() {
-  return GET()
 }

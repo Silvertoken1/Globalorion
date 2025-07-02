@@ -17,7 +17,11 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["@neondatabase/serverless", "bcryptjs", "jsonwebtoken", "nodemailer"],
+    serverComponentsExternalPackages: ["@neondatabase/serverless", "bcryptjs", "nodemailer"],
+  },
+  api: {
+    externalResolver: true,
+    bodyParser: false,
   },
 }
 
