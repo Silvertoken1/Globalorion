@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyToken } from "@/lib/auth"
-import { createPin } from "@/lib/db"
+import { verifyTokenFromRequest } from "@/lib/auth"
+import { createPin } from "@/lib/database"
+
+export const dynamic = "force-dynamic"
 
 function generateRandomPin(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -13,14 +15,8 @@ function generateRandomPin(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded || decoded.role !== "admin") {
+    const user = await verifyTokenFromRequest(request)
+    if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
@@ -33,7 +29,7 @@ export async function POST(request: NextRequest) {
     const pins = []
     for (let i = 0; i < count; i++) {
       const pinCode = generateRandomPin()
-      const pin = await createPin(pinCode, decoded.userId)
+      const pin = await createPin(pinCode, user.userId)
       pins.push(pin)
     }
 

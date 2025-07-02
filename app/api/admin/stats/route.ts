@@ -1,12 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyToken } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { verifyTokenFromRequest } from "@/lib/auth"
+import { db } from "@/lib/database"
 import { users, activationPins, payments, commissions } from "@/lib/db/schema"
 import { eq, count, sum } from "drizzle-orm"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyToken(request)
+    const user = await verifyTokenFromRequest(request)
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
