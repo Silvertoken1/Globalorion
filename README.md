@@ -40,8 +40,8 @@ A comprehensive MLM platform built with Next.js, featuring secure user registrat
 ### 1. Clone Repository
 
 \`\`\`bash
-git clone https://github.com/Silvertoken1/Globalorion.git
-cd Globalorion
+git clone https://github.com/zahraddeensaleh/globalorion-mlm.git
+cd globalorion-mlm
 \`\`\`
 
 ### 2. Install Dependencies
@@ -56,25 +56,33 @@ npm install
 cp .env.example .env
 \`\`\`
 
-Fill in your environment variables:
+Fill in your environment variables in `.env`:
 
 \`\`\`env
 # Database (Get from Neon Dashboard)
 DATABASE_URL="postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 # Admin Credentials (Change these!)
-ADMIN_EMAIL="admin@globalorion.com"
+ADMIN_EMAIL="zahraddeensaleh@gmail.com"
 ADMIN_PASSWORD="SecureAdmin123!"
+ADMIN_PHONE="+2348101227065"
+
+# JWT Secret (Generate with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+JWT_SECRET="your-super-secure-jwt-secret-key"
 
 # Paystack Keys (Get from Paystack Dashboard)
 PAYSTACK_SECRET_KEY="sk_test_your_secret_key"
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY="pk_test_your_public_key"
 
-# JWT Secret (Generate a strong random string)
-JWT_SECRET="your-super-secure-jwt-secret-key"
+# Email Configuration
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="zahraddeensaleh@gmail.com"
+SMTP_PASS="your-app-password"
+FROM_EMAIL="zahraddeensaleh@gmail.com"
 
 # App URL
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="https://your-domain.vercel.app"
 \`\`\`
 
 ### 4. Database Setup
@@ -172,6 +180,57 @@ CREATE TABLE IF NOT EXISTS withdrawals (
     processed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create stockists table
+CREATE TABLE IF NOT EXISTS stockists (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    business_name TEXT NOT NULL,
+    business_address TEXT NOT NULL,
+    business_phone TEXT NOT NULL,
+    business_email TEXT NOT NULL,
+    cac_number TEXT,
+    bank_name TEXT NOT NULL,
+    account_number TEXT NOT NULL,
+    account_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    approved_by INTEGER REFERENCES users(id),
+    approved_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create stockist_transactions table
+CREATE TABLE IF NOT EXISTS stockist_transactions (
+    id SERIAL PRIMARY KEY,
+    stockist_id INTEGER REFERENCES stockists(id) NOT NULL,
+    type TEXT NOT NULL,
+    amount REAL NOT NULL,
+    quantity INTEGER,
+    description TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create audit_logs table for security tracking
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    action TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    ip_address INET,
+    user_agent TEXT,
+    details JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create login_attempts table for security
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    ip_address INET NOT NULL,
+    success BOOLEAN NOT NULL DEFAULT FALSE,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 \`\`\`
 
 ### 5. Initialize Database
@@ -186,7 +245,7 @@ Visit: `http://localhost:3000/api/init`
 
 1. **Admin Login**: 
    - URL: `/auth/login`
-   - Email: `admin@globalorion.com`
+   - Email: `zahraddeensaleh@gmail.com`
    - Password: `SecureAdmin123!`
 
 2. **User Registration**:
@@ -197,13 +256,61 @@ Visit: `http://localhost:3000/api/init`
 
 ## 🔒 Security Features
 
-- **Password Encryption**: bcrypt with salt rounds
-- **JWT Authentication**: Secure token-based auth
-- **Input Validation**: Zod schema validation
-- **Rate Limiting**: API endpoint protection
-- **CSRF Protection**: Cross-site request forgery prevention
-- **SQL Injection Prevention**: Parameterized queries
+### Authentication & Authorization
+- **Password Encryption**: bcrypt with 12 salt rounds
+- **JWT Authentication**: Secure token-based auth with jose library
+- **Role-based Access Control**: Admin, User, Stockist roles
+- **Session Management**: HTTP-only cookies with secure flags
+- **Token Expiration**: 7-day token lifecycle
+
+### Input Validation & Sanitization
+- **Schema Validation**: Zod-based input validation
+- **SQL Injection Prevention**: Parameterized queries with Drizzle ORM
 - **XSS Protection**: Content Security Policy headers
+- **CSRF Protection**: SameSite cookie attributes
+
+### Rate Limiting & Monitoring
+- **API Rate Limiting**: Endpoint-specific rate limits
+- **Login Attempt Tracking**: Failed login monitoring
+- **Audit Logging**: Complete action tracking
+- **IP-based Restrictions**: Suspicious activity detection
+
+### Data Protection
+- **Database Encryption**: SSL/TLS connections
+- **Environment Variables**: Secure secret management
+- **HTTPS Enforcement**: Production SSL requirements
+- **Data Sanitization**: Input/output data cleaning
+
+### Security Headers
+\`\`\`javascript
+// Security headers configuration
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on'
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload'
+  },
+  {
+    key: 'X-XSS-Protection',
+    value: '1; mode=block'
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN'
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff'
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'origin-when-cross-origin'
+  }
+]
+\`\`\`
 
 ## 📊 Commission Structure
 
@@ -225,7 +332,7 @@ Visit: `http://localhost:3000/api/init`
 1. **Push to GitHub**:
 \`\`\`bash
 git add .
-git commit -m "Initial commit"
+git commit -m "Initial deployment"
 git push origin main
 \`\`\`
 
@@ -262,20 +369,46 @@ git push origin main
 
 ## 🛡️ Security Best Practices
 
+### For Administrators
+1. **Strong Passwords**: Use complex passwords with special characters
+2. **Two-Factor Authentication**: Enable 2FA when available
+3. **Regular Updates**: Keep dependencies updated
+4. **Access Monitoring**: Review admin access logs regularly
+5. **Backup Strategy**: Regular database backups
+
+### For Developers
 1. **Environment Variables**: Never commit `.env` files
-2. **Strong Passwords**: Use complex admin passwords
-3. **JWT Secrets**: Generate cryptographically secure secrets
-4. **Database**: Use connection pooling and SSL
-5. **Rate Limiting**: Implement API rate limiting
-6. **Input Validation**: Validate all user inputs
-7. **HTTPS**: Always use HTTPS in production
+2. **JWT Secrets**: Generate cryptographically secure secrets
+3. **Database Security**: Use connection pooling and SSL
+4. **Code Reviews**: Implement peer review process
+5. **Security Testing**: Regular penetration testing
 
-## 📞 Support
+### For Users
+1. **Password Security**: Use unique, strong passwords
+2. **Account Monitoring**: Check account activity regularly
+3. **Secure Connections**: Always use HTTPS
+4. **Phishing Awareness**: Verify official communications
+5. **Device Security**: Keep devices updated and secure
 
-- **Email**: support@globalorion.com
-- **Phone**: +234-800-GLOBAL
-- **Documentation**: [docs.globalorion.com](https://docs.globalorion.com)
-- **GitHub Issues**: [Create Issue](https://github.com/Silvertoken1/Globalorion/issues)
+## 📞 Support & Contact
+
+### Developer Information
+- **Name**: Zahraddeen Saleh
+- **Email**: zahraddeensaleh@gmail.com
+- **Phone**: +2348101227065
+- **GitHub**: [github.com/zahraddeensaleh](https://github.com/zahraddeensaleh)
+
+### Support Channels
+- **Technical Support**: zahraddeensaleh@gmail.com
+- **Business Inquiries**: +2348101227065
+- **Bug Reports**: [GitHub Issues](https://github.com/zahraddeensaleh/globalorion-mlm/issues)
+- **Feature Requests**: [GitHub Discussions](https://github.com/zahraddeensaleh/globalorion-mlm/discussions)
+
+### Response Times
+- **Critical Issues**: Within 2 hours
+- **General Support**: Within 24 hours
+- **Feature Requests**: Within 1 week
+- **Bug Reports**: Within 48 hours
 
 ## 📄 License
 
@@ -289,6 +422,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
+### Contribution Guidelines
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Update documentation
+- Follow security guidelines
+- Use conventional commit messages
+
+## 🔐 Security Policy
+
+### Reporting Security Vulnerabilities
+
+If you discover a security vulnerability, please send an email to zahraddeensaleh@gmail.com. All security vulnerabilities will be promptly addressed.
+
+**Please do not report security vulnerabilities through public GitHub issues.**
+
+### Security Response Process
+1. **Acknowledgment**: Within 24 hours
+2. **Assessment**: Within 48 hours
+3. **Fix Development**: Within 1 week
+4. **Testing**: Within 2 days
+5. **Deployment**: Within 24 hours of testing
+
 ## 🙏 Acknowledgments
 
 - Built with [Next.js](https://nextjs.org/)
@@ -297,6 +452,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Payment by [Paystack](https://paystack.com/)
 - Hosted on [Vercel](https://vercel.com/)
 
+## 📈 Version History
+
+### v1.0.0 (Current)
+- Initial release
+- Complete MLM system
+- Admin dashboard
+- Payment integration
+- Security implementation
+
+### Roadmap
+- [ ] Mobile app development
+- [ ] Advanced analytics
+- [ ] Multi-language support
+- [ ] API rate limiting dashboard
+- [ ] Advanced reporting system
+
 ---
 
-**Made with ❤️ in Nigeria 🇳🇬**
+**Made with ❤️ by Zahraddeen Saleh in Nigeria 🇳🇬**
+
+**© 2024 Global Orion MLM Platform. All rights reserved.**
